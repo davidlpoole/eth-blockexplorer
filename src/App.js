@@ -1,5 +1,5 @@
-import { Alchemy, Network } from 'alchemy-sdk';
-import { useEffect, useState } from 'react';
+import {Alchemy, Network, Utils} from 'alchemy-sdk';
+import {useEffect, useState} from 'react';
 
 import './App.css';
 
@@ -7,10 +7,9 @@ import './App.css';
 // keys in client-side code. You should never do this in production
 // level code.
 const settings = {
-  apiKey: process.env.REACT_APP_ALCHEMY_API_KEY,
-  network: Network.ETH_MAINNET,
+    apiKey: process.env.REACT_APP_ALCHEMY_API_KEY,
+    network: Network.ETH_MAINNET,
 };
-
 
 // In this week's lessons we used ethers.js. Here we are using the
 // Alchemy SDK is an umbrella library with several different packages.
@@ -19,18 +18,60 @@ const settings = {
 //   https://docs.alchemy.com/reference/alchemy-sdk-api-surface-overview#api-surface
 const alchemy = new Alchemy(settings);
 
+function Transactions({ transactions }) {
+    return (
+        <ul>
+            {transactions &&
+                transactions.map((tx, i) => {
+                    return (
+                        <li key={i}>
+                            <h4>Hash: {tx.hash}</h4>
+                            <div>From: {tx.from}</div>
+                            <div>To: {tx.to}</div>
+                            <div>Amount: {Utils.formatEther(tx.value)} Ether</div>
+                        </li>
+                    );
+                })}
+        </ul>
+    )
+}
+
 function App() {
-  const [blockNumber, setBlockNumber] = useState();
+    const [blockNumber, setBlockNumber] = useState();
+    const [transactions, setTransactions] = useState();
+    const [gasPrice, setGasPrice] = useState(0);
 
-  useEffect(() => {
-    async function getBlockNumber() {
-      setBlockNumber(await alchemy.core.getBlockNumber());
-    }
+    useEffect(() => {
+        async function getBlockNumber() {
+            setBlockNumber(await alchemy.core.getBlockNumber());
+        }
+        getBlockNumber();
+    },[]);
 
-    getBlockNumber();
-  });
+    useEffect(() => {
+        async function getBlockTransactions() {
+            const block = await alchemy.core.getBlockWithTransactions(blockNumber);
+            setTransactions(block.transactions);
+        }
+        getBlockTransactions()
+    }, [blockNumber]);
 
-  return <div className="App">Block Number: {blockNumber}</div>;
+    useEffect(() => {
+        async function getGasPrice() {
+            setGasPrice(await alchemy.core.getGasPrice())
+        }
+        getGasPrice();
+    }, [])
+
+    return (
+        <div className="App">
+            <h1>Ethereum Block Explorer</h1>
+            <h2>Latest Block Number: {blockNumber}</h2>
+            <h3>Current Estimated Gas Price: {Utils.formatEther(gasPrice)} Ether</h3>
+            <h3>Block transactions ({transactions && transactions.length}):</h3>
+            <Transactions transactions={transactions}/>
+        </div>
+    );
 }
 
 export default App;
