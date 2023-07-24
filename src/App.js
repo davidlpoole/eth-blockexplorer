@@ -18,6 +18,16 @@ const settings = {
 //   https://docs.alchemy.com/reference/alchemy-sdk-api-surface-overview#api-surface
 const alchemy = new Alchemy(settings);
 
+function formatAddr(full_addr) {
+    if (full_addr.length === 42) {
+        const left = full_addr.slice(0,8);
+        const right = full_addr.slice(36,42);
+        return (`${left}...${right}`);
+    } else {
+        return full_addr || ''
+    }
+}
+
 function Transactions({ transactions }) {
     return (
         <ul>
@@ -26,8 +36,8 @@ function Transactions({ transactions }) {
                     return (
                         <li key={i}>
                             <h4>Hash: {tx.hash}</h4>
-                            <div>From: {tx.from}</div>
-                            <div>To: {tx.to}</div>
+                            <div>From: <a title={tx.from}>{formatAddr(tx.from)}</a></div>
+                            <div>To: <a title={tx.from}>{formatAddr(tx.to)}</a></div>
                             <div>Amount: {Utils.formatEther(tx.value)} Ether</div>
                         </li>
                     );
